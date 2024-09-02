@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CSV and OBJ File Processor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #34495e;
+            --secondary-color: #7f8c8d;
+            --accent-color: #3498db;
+            --background-color: #ecf0f1;
+            --card-background: #ffffff;
+            --text-color: #2c3e50;
+            --border-color: #bdc3c7;
+            --success-color: #27ae60;
+            --error-color: #c0392b;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            padding: 40px;
+            background-color: var(--card-background);
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+            font-size: 24px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--secondary-color);
+            font-weight: 400;
+            font-size: 14px;
+        }
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        .file-input-wrapper input[type="file"] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .file-input-wrapper .btn {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: var(--accent-color);
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 400;
+            transition: background-color 0.3s ease;
+        }
+        .file-input-wrapper .btn:hover {
+            background-color: #2980b9;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+        }
+        input[type="submit"] {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+        }
+        input[type="submit"]:hover {
+            background-color: #2c3e50;
+        }
+        .file-name {
+            margin-top: 5px;
+            font-size: 12px;
+            color: var(--secondary-color);
+        }
+        #result-message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        .error {
+            background-color: var(--error-color);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SciBlend: DataMesh - CSV + OBJ to VTK</h1>
+        <form id="process-form" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="csv_file">CSV File:</label>
+                <div class="file-input-wrapper">
+                    <button class="btn" type="button">Select CSV File</button>
+                    <input type="file" name="csv_file" id="csv_file" accept=".csv">
+                </div>
+                <div id="csv_file_name" class="file-name"></div>
+            </div>
+            <div class="form-group">
+                <label for="obj_file">OBJ File:</label>
+                <div class="file-input-wrapper">
+                    <button class="btn" type="button">Select OBJ File</button>
+                    <input type="file" name="obj_file" id="obj_file" accept=".obj">
+                </div>
+                <div id="obj_file_name" class="file-name"></div>
+            </div>
+            <div class="form-group">
+                <label for="start_frame">Start Frame:</label>
+                <input type="number" name="start_frame" id="start_frame" min="0" value="0">
+            </div>
+            <div class="form-group">
+                <label for="end_frame">End Frame:</label>
+                <input type="number" name="end_frame" id="end_frame" min="-1" value="-1">
+            </div>
+            <input type="submit" value="Process Files">
+        </form>
+        <div id="result-message"></div>
+    </div>
+
+    <script>
+        document.getElementById('csv_file').addEventListener('change', function() {
+            document.getElementById('csv_file_name').textContent = this.files[0].name;
+        });
+        document.getElementById('obj_file').addEventListener('change', function() {
+            document.getElementById('obj_file_name').textContent = this.files[0].name;
+        });
+
+        document.getElementById('process-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+
+            fetch('/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                var resultMessage = document.getElementById('result-message');
+                if (data.success) {
+                    resultMessage.textContent = 'Files Generated Successfully!';
+                    resultMessage.className = 'success';
+                } else {
+                    resultMessage.textContent = 'Error: ' + data.message;
+                    resultMessage.className = 'error';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>
